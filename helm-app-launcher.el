@@ -1,10 +1,10 @@
-;;; helm-app-launcher.el --- Launch applications defined by XDG from Helm Emacs -*- lexical-binding: t -*-
+;;; helm-app-launcher.el --- Launch applications defined by XDG from Helm -*- lexical-binding: t -*-
 
 ;; Author: Brian Caruso
 ;; Created: 2023
 ;; License: GPL-3.0-or-later
 ;; Version: 0.1
-;; Package-Requires: ((emacs "27.1"))
+;; Package-Requires: ((emacs "27.1")(helm "3.0"))
 ;; Homepage: https://github.com/bdc34/helm-app-launcher
 
 ;; This file is not part of GNU Emacs.
@@ -36,16 +36,23 @@
 
 
 (require 'xdg)
-(require 'cl-seq)
+(require 'cl-lib)
+(require 'helm)
 
 ;;; Code:
+
+(defgroup helm-app-launcher nil
+  "Use helm to launch apps from XDG."
+  :prefix "helm-app-launcher-"
+  :group 'external)
 
 (defcustom helm-app-launcher-apps-directories
   (mapcar (lambda (dir) (expand-file-name "applications" dir))
       (cons (xdg-data-home)
         (xdg-data-dirs)))
   "Directories in which to search for applications (.desktop files)."
-  :type '(repeat directory))
+  :type '(repeat directory)
+  :group 'helm-app-launcher)
 
 (defvar helm-app-launcher--cache nil
   "Cache of desktop files data.")
@@ -101,7 +108,6 @@ This function always returns its elements in a stable order."
 
           (goto-char start)
           (unless (re-search-forward "^Name *= *\\(.+\\)$" end t)
-        (push file counsel-linux-apps-faulty)
         (message "Warning: File %s has no Name" file)
         (throw 'break nil))
           (setq name (match-string 1))
@@ -168,8 +174,7 @@ This function always returns its elements in a stable order."
          (additional (if comment
                          (format "- %s" (propertize comment 'face 'completions-annotations))
                        ""))
-         (cmd (propertize (cdr (assoc 'exec v)) 'face ''font-lock-constant-face))
-         )
+         (cmd (propertize (cdr (assoc 'exec v)) 'face ''font-lock-constant-face)))
     (format "%s %s %s" name additional cmd)))
 
 (defun helm-app-launcher-candidates ()
@@ -179,10 +184,9 @@ This function always returns its elements in a stable order."
     (maphash (lambda (k v)
                (push (cons (helm-app-launcher-format-candidate k v) v) app-list))
              apps)
-    app-list)
-  )
+    app-list))
 
-(defvar helm-source-apps
+(defvar helm-app-launcher-source
   (helm-build-sync-source "Applications"
     :fuzzy-match t
     :candidates 'helm-app-launcher-candidates

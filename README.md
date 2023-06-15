@@ -1,2 +1,5 @@
 # helm-app-launcher
-Emacs helm XDG app menu 
+
+Uses Emacs Helm to launch applications defined by XDG.
+
+This packages based on code from Sebastien Waegeneire. https://github.com/sebastienwae/app-launcher
