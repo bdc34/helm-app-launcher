@@ -199,7 +199,7 @@ This function always returns its elements in a stable order."
   ;; (run-hooks 'helm-taskswitch-open-hooks )
   (select-frame-set-input-focus (window-frame (selected-window)))
   (make-frame-visible)
-  (helm :sources '(helm-source-apps)
+  (helm :sources '(helm-app-launcher-source)
         :buffer "*helm-app-launcher*"
         :truncate-lines t))
 
