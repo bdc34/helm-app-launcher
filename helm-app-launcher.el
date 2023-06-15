@@ -1,4 +1,4 @@
-;;; helm-app-launcher.el --- Launch applications from Helm Emacs -*- lexical-binding: t -*-
+;;; helm-app-launcher.el --- Launch applications defined by XDG from Helm Emacs -*- lexical-binding: t -*-
 
 ;; Author: Brian Caruso
 ;; Created: 2023
@@ -24,8 +24,8 @@
 
 ;;; Commentary:
 
-;; helm-app-launcher defines the `helm-app-launch' command which uses
-;; Helm to select an application installed on your machine and launch it.
+;; helm-app-launcher defines the `helm-app-launch' command which uses Helm to
+;; select an application installed in XDG files on your machine and launch it.
 
 ;;; Acknowledgements:
 
@@ -37,6 +37,8 @@
 
 (require 'xdg)
 (require 'cl-seq)
+
+;;; Code:
 
 (defcustom helm-app-launcher-apps-directories
   (mapcar (lambda (dir) (expand-file-name "applications" dir))
@@ -71,7 +73,7 @@ This function always returns its elements in a stable order."
     result))
 
 (defun helm-app-launcher-parse-files (files)
-  "Parse the .desktop files to return usable informations."
+  "Parse the .desktop FILES to return usable informations."
   (let ((hash (make-hash-table :test #'equal)))
     (dolist (entry files hash)
       (let ((file (cdr entry)))
@@ -145,7 +147,7 @@ This function always returns its elements in a stable order."
 
 
 (defun helm-app-launcher--action-function (selected)
-  "Default function used to run the selected application."
+  "Default function used to run the SELECTED application."
   (let* ((exec (cdr (assq 'exec selected)))
 	     (command (let (result)
 		            (dolist (chunk (split-string exec " ") result)
@@ -160,10 +162,15 @@ This function always returns its elements in a stable order."
 
 
 (defun helm-app-launcher-format-candidate (k v)
+  "Format for key K and assoc list V."
   (let* ((name (format "%s" k))
          (comment (cdr (assoc 'comment v)))
-         (additional (if comment (format "- %s" comment) "")))
-    (format "%s %s" name additional)))
+         (additional (if comment
+                         (format "- %s" (propertize comment 'face 'completions-annotations))
+                       ""))
+         (cmd (propertize (cdr (assoc 'exec v)) 'face ''font-lock-constant-face))
+         )
+    (format "%s %s %s" name additional cmd)))
 
 (defun helm-app-launcher-candidates ()
   "Return a list of XDG menu apps."
@@ -187,7 +194,7 @@ This function always returns its elements in a stable order."
   (interactive)
   ;; (run-hooks 'helm-taskswitch-open-hooks )
   (select-frame-set-input-focus (window-frame (selected-window)))
-  (make-frame-visible) 
+  (make-frame-visible)
   (helm :sources '(helm-source-apps)
         :buffer "*helm-app-launcher*"
         :truncate-lines t))
@@ -200,3 +207,7 @@ This function always returns its elements in a stable order."
 
 ;; Provide the helm-app-launcher feature
 (provide 'helm-app-launcher)
+
+(provide 'helm-app-launcher)
+
+;;; helm-app-launcher.el ends here
