@@ -211,7 +211,4 @@ This function always returns its elements in a stable order."
 
 ;; Provide the helm-app-launcher feature
 (provide 'helm-app-launcher)
-
-(provide 'helm-app-launcher)
-
 ;;; helm-app-launcher.el ends here
